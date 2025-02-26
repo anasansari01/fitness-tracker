@@ -1,19 +1,37 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  goal: { type: String, default: null },
-  activityLevel: { type: String, enum: ['nonVeryActive', 'lightlyActive', 'active', 'veryActive'], default: null },
-  country: { type: String, default: null },
-  age: { type: Number, default: null },
-  gender: { type: String, enum: ['male', 'female', 'other'], default: null },
-  height: { type: Number, default: null },
-  weight: { type: Number, default: null },
-  goalWeight: { type: Number, default: null },
-  bmi: { type: Number, default: null },
-  bmr: { type: Number, default: null },
-  tdee: { type: Number, default: null },
-  calories: { type: Number, default: null },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  name: { type: String, unique: true, sparse: true },
+  goal: {
+    type: String,
+    enum: ['loseWeight', 'maintainWeight', 'gainWeight', 'gainMuscle', 'modifyDiet', 'stepCount'],
+  },
+  activityLevel: {
+    type: String,
+    enum: ['nonVeryActive', 'lightlyActive', 'active', 'veryActive'],
+  },
+  country: { type: String },
+  age: { type: Number, min: 0 },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other'],
+  },
+  height: { type: Number, min: 0 },
+  weight: { type: Number, min: 0 },
+  goalWeight: { type: Number, min: 0 },
+  bmi: { type: Number, min: 0 },
+  bmr: { type: Number, min: 0 },
+  tdee: { type: Number, min: 0 },
+  calories: { type: Number, min: 0 },
 });
 
 export const User = mongoose.model('User', userSchema);

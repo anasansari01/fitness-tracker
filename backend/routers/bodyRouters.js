@@ -1,18 +1,61 @@
 import express from 'express';
 import { User } from '../models/userSchmena.js';
 import { checkSession } from '../middleware/checkSession.js';
+import { hashPassword, compare } from '../utils/helper.js';
 
 const router = express.Router();
 
-//To create a New User:
-router.post("/create", async (req, res) => {
+router.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: "All fields (username, password) are required" });
+  }
+
   try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ message: "Name is required" });
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this username already exists" });
     }
-    const newUser = await User.create({ name });
-    req.session.userId = newUser._id;
+
+    const hashedPassword = await hashPassword(password);
+
+    const newUser = new User({ username, password: hashedPassword });
+    await newUser.save();
+
+    res.status(201).json({
+      message: "User created successfully",
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+      },
+    });
+
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (req.session.user) {
+    return res.status(400).json({ message: "Already logged in" });
+  }
+
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const isMatch = await compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Bad Credentials: Check password" });
+    }
+
+    req.session.user = { userId: user._id, username: user.username };
 
     req.session.save((err) => {
       if (err) {
@@ -20,11 +63,35 @@ router.post("/create", async (req, res) => {
         return res.status(500).json({ message: "Session error" });
       }
 
-      return res.status(201).json({
-        message: "User created successfully",
-        newUser
+      res.cookie("sessionId", req.sessionID, {
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true,
+      });
+
+      return res.status(200).json({
+        message: "Login successful",
+        user: { userId: user._id, username: user.username },
       });
     });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+});
+
+//To Enter the name of user:
+router.put("/name", async (req, res) => {
+  try {
+    const { userId } = req.session.user;
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    const user = await User.findByIdAndUpdate(userId, { name });
+
+    return res.status(201).json(user);
 
   } catch (error) {
     console.error(error);
@@ -33,26 +100,26 @@ router.post("/create", async (req, res) => {
 });
 
 //checking session validity
-router.get("/check-session", (req, res) => {
+router.get("/login/check-session", (req, res) => {
   console.log("Session Data:", req.session);
 
-  if (!req.session.userId) {
+  if (!req.session.user) {
     return res.status(401).json({ message: "No active session" });
   }
 
-  return res.status(200).json({ message: "Session active", userId: req.session.userId });
+  return res.status(200).json({ message: "Session active", user: req.session.user });
 });
 
 
 //To get all the data from the Database:
-router.get('/users', async (req, res) => {
+router.get('/user', async (req, res) => {
   try {
 
-    const body = await User.find({});
+    const users = await User.find({});
 
     return res.status(200).json({
-      count: User.length,
-      data: body,
+      count: users.length,
+      data: users,
     })
 
   } catch (error) {
@@ -62,7 +129,7 @@ router.get('/users', async (req, res) => {
 })
 
 //To get by id from the Database:
-router.get('/users/:id', async (req, res) => {
+router.get('/user/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const body = await User.findById(id);
@@ -83,7 +150,7 @@ router.get('/users/:id', async (req, res) => {
 router.put('/demographics', checkSession, async (req, res) => {
   try {
 
-    const { userId } = req.session;
+    const { userId } = req.session.user;
     const { age, gender, height, weight } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(userId, {
@@ -106,11 +173,11 @@ router.put('/demographics', checkSession, async (req, res) => {
 router.put('/goals', checkSession, async (req, res) => {
   try {
 
-    const { userId } = req.session;
-    const { goal, activityLevel } = req.body;
+    const { userId } = req.session.user;
+    const { goal, goalWeight, activityLevel } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(userId, {
-      goal, activityLevel
+      goal, goalWeight, activityLevel
     }, { new: true });
 
     if (!updatedUser) {
@@ -129,7 +196,7 @@ router.put('/goals', checkSession, async (req, res) => {
 router.get('/profile', checkSession, async (req, res) => {
   try {
 
-    const { userId } = req.session;
+    const { userId } = req.session.user;
     const user = await User.findById(userId);
 
     if (!user) {
@@ -146,7 +213,7 @@ router.get('/profile', checkSession, async (req, res) => {
 //Store calculated results (BMI, BMR, TDEE, Calories)
 router.put('/results', checkSession, async (req, res) => {
   try {
-    const { userId } = req.session;
+    const { userId } = req.session.user;
     const { bmi, bmr, tdee, calories } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -165,9 +232,9 @@ router.put('/results', checkSession, async (req, res) => {
 });
 
 // delete session / destroy session
-router.delete('/delete', async (req, res) => {
+router.delete('/user', async (req, res) => {
   try {
-    const { userId } = req.session;
+    const { userId } = req.session.user;
     const result = await User.findByIdAndDelete(userId);
 
     if (!result) {
@@ -184,7 +251,7 @@ router.delete('/delete', async (req, res) => {
 })
 
 //To delete by id from the Database:
-router.delete('/users/:id', async (req, res) => {
+router.delete('/user/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await User.findByIdAndDelete(id);
