@@ -1,97 +1,40 @@
 import express from 'express';
 import { User } from '../models/userSchmena.js';
 import { checkSession } from '../middleware/checkSession.js';
-import { hashPassword, compare } from '../utils/helper.js';
+import { createUserHandler } from '../handler/registerUser.js'
+import { checkSchema, validationResult } from 'express-validator';
+import { checkUsernameValidationSchema } from "../utils/checkUsernameValidationSchema.js"
+import passport from 'passport';
+import '../strategies/local-strategies.js'
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+router.post("/register", checkSchema(checkUsernameValidationSchema), createUserHandler);
 
-  if (!username || !password) {
-    return res.status(400).json({ message: "All fields (username, password) are required" });
-  }
-
-  try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: "User with this username already exists" });
-    }
-
-    const hashedPassword = await hashPassword(password);
-
-    const newUser = new User({ username, password: hashedPassword });
-    await newUser.save();
-
-    res.status(201).json({
-      message: "User created successfully",
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-      },
-    });
-
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-
-  if (req.session.user) {
-    return res.status(400).json({ message: "Already logged in" });
-  }
-
-  try {
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    const isMatch = await compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Bad Credentials: Check password" });
-    }
-
-    req.session.user = { userId: user._id, username: user.username };
-
-    req.session.save((err) => {
-      if (err) {
-        console.error("Session save error:", err);
-        return res.status(500).json({ message: "Session error" });
-      }
-
-      res.cookie("sessionId", req.sessionID, {
-        maxAge: 1000 * 60 * 60 * 24,
-        httpOnly: true,
-      });
-
-      return res.status(200).json({
-        message: "Login successful",
-        user: { userId: user._id, username: user.username },
-      });
-    });
-
-  } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({ message: "Server Error" });
-  }
+router.post("/login", passport.authenticate('local'), (req, res) => {
+  return res.status(200).json({
+    message: "Login successful",
+    user: req.user,
+  });
 });
 
 //To Enter the name of user:
-router.put("/name", async (req, res) => {
+router.put("/name", checkSession, async (req, res) => {
   try {
-    const { userId } = req.session.user;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user } = req.session.passport;
     const { name } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
 
-    const user = await User.findByIdAndUpdate(userId, { name });
+    const userName = await User.findByIdAndUpdate(user, { name });
 
-    return res.status(201).json(user);
+    return res.status(201).json(userName);
 
   } catch (error) {
     console.error(error);
@@ -100,14 +43,8 @@ router.put("/name", async (req, res) => {
 });
 
 //checking session validity
-router.get("/login/check-session", (req, res) => {
-  console.log("Session Data:", req.session);
-
-  if (!req.session.user) {
-    return res.status(401).json({ message: "No active session" });
-  }
-
-  return res.status(200).json({ message: "Session active", user: req.session.user });
+router.get('/login/check-session', checkSession, (req, res) => {
+  return res.status(200).send({ message: "Session is Active" });
 });
 
 
@@ -150,10 +87,15 @@ router.get('/user/:id', async (req, res) => {
 router.put('/demographics', checkSession, async (req, res) => {
   try {
 
-    const { userId } = req.session.user;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user } = req.session.passport;
     const { age, gender, height, weight } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(userId, {
+    const updatedUser = await User.findByIdAndUpdate(user, {
       age, gender, height, weight
     }, { new: true });
 
@@ -173,10 +115,15 @@ router.put('/demographics', checkSession, async (req, res) => {
 router.put('/goals', checkSession, async (req, res) => {
   try {
 
-    const { userId } = req.session.user;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user } = req.session.passport;
     const { goal, goalWeight, activityLevel } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(userId, {
+    const updatedUser = await User.findByIdAndUpdate(user, {
       goal, goalWeight, activityLevel
     }, { new: true });
 
@@ -196,14 +143,19 @@ router.put('/goals', checkSession, async (req, res) => {
 router.get('/profile', checkSession, async (req, res) => {
   try {
 
-    const { userId } = req.session.user;
-    const user = await User.findById(userId);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user } = req.session.passport;
+    const userProfile = await User.findById(user);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     };
 
-    return res.status(200).json(user);
+    return res.status(200).json(userProfile);
   } catch (error) {
     console.log(error);
     return res.status(500).send({ message: error.message });
@@ -213,11 +165,16 @@ router.get('/profile', checkSession, async (req, res) => {
 //Store calculated results (BMI, BMR, TDEE, Calories)
 router.put('/results', checkSession, async (req, res) => {
   try {
-    const { userId } = req.session.user;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user } = req.session.passport;
     const { bmi, bmr, tdee, calories } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
-      userId,
+      user,
       { bmi, bmr, tdee, calories },
       { new: true }
     );
@@ -234,8 +191,13 @@ router.put('/results', checkSession, async (req, res) => {
 // delete session / destroy session
 router.delete('/user', async (req, res) => {
   try {
-    const { userId } = req.session.user;
-    const result = await User.findByIdAndDelete(userId);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user } = req.session.passport;
+    const result = await User.findByIdAndDelete(user);
 
     if (!result) {
       return res.status(404).json({ message: "User not found" });

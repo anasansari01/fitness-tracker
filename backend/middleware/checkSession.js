@@ -1,9 +1,17 @@
 export const checkSession = (req, res, next) => {
-  console.log("Session Data:", req.session);
-
-  if (!req.session.user || !req.session.user.userId) {
-    return res.status(401).json({ message: "Unauthorized: No active user session" });
+  if (!req.sessionID) {
+    return res.status(401).json({ message: "No active session" });
   }
 
-  next();
+  req.sessionStore.get(req.sessionID, (err, sessionData) => {
+    if (err || !sessionData) {
+      return res.status(401).json({ message: "Session not found or expired" });
+    }
+
+    console.log(`✅ Session active for user: ${sessionData.passport.user}`);
+
+    req.sessionData = sessionData;
+
+    next();
+  });
 };
