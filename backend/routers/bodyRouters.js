@@ -189,7 +189,7 @@ router.put('/results', checkSession, async (req, res) => {
 });
 
 // delete session / destroy session
-router.delete('/user', async (req, res) => {
+router.delete('/delete', async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -213,7 +213,7 @@ router.delete('/user', async (req, res) => {
 })
 
 //To delete by id from the Database:
-router.delete('/user/:id', async (req, res) => {
+router.delete('/delete/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await User.findByIdAndDelete(id);
