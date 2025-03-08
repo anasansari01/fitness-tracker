@@ -4,7 +4,7 @@ import { assets } from "../../assets/assets";
 const HealthGoal = () => {
   return (
     <div className="items-center justify-center">
-      <section className="max-w-3xl mx-auto p-6 relative">
+      <section className="max-w-3xl mx-auto p-6  mb-10 relative">
         <div className="flex items-center justify-center">
           <img src={assets.flag} alt="Goal flag" className="w-5" />
         </div>
@@ -66,7 +66,7 @@ const HealthGoal = () => {
           </div>
         </div>
       </section>
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center m-10">
         <section className="bg-gray-800 text-white p-6 rounded-2xl shadow-lg max-w-xl flex flex-col sm:flex-row items-center justify-center">
           <div className="flex-1 text-center sm:text-left">
             <p className="text-sm text-gray-400">25+ apps and devices</p>

@@ -5,6 +5,8 @@ import track_food_large from './track-food-large.webp'
 import flag from './flag.webp'
 import app_integrations_large from './app-integrations-large.webp'
 import food_plan from './food-plan.svg'
+import people1 from './people1.webp'
+import people2 from './people2.webp'
 
 export const assets = {
   learn_what_works_large,
@@ -13,5 +15,7 @@ export const assets = {
   track_food_large,
   flag,
   app_integrations_large,
-  food_plan
+  food_plan,
+  people1,
+  people2
 }
