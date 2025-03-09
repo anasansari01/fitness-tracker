@@ -8,6 +8,9 @@ import food_plan from './food-plan.svg'
 import people1 from './people1.webp'
 import people2 from './people2.webp'
 import daily_plan from './daily-plan.webp'
+import dietician_large from './dietician-large.webp'
+import food_full from './food-full.webp'
+import running_full from './running-full.webp'
 
 export const assets = {
   learn_what_works_large,
@@ -19,5 +22,8 @@ export const assets = {
   food_plan,
   people1,
   people2,
-  daily_plan
+  daily_plan,
+  dietician_large,
+  food_full,
+  running_full
 }

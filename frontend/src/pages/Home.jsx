@@ -5,6 +5,7 @@ import StartButton from "../component/home/StartButton";
 import FoodPlan from "../component/home/FoodPlan";
 import GetResult from "../component/home/GetResult";
 import Quiz from "../component/home/Quiz";
+import KnowledgeSection from "../component/home/KnowledgeSection";
 
 const Home = () => {
   return (
@@ -15,6 +16,7 @@ const Home = () => {
       {<FoodPlan />}
       {<GetResult />}
       {<Quiz />}
+      {<KnowledgeSection />}
     </div>
   );
 };
