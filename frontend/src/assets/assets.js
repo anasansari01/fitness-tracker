@@ -7,6 +7,7 @@ import app_integrations_large from './app-integrations-large.webp'
 import food_plan from './food-plan.svg'
 import people1 from './people1.webp'
 import people2 from './people2.webp'
+import daily_plan from './daily-plan.webp'
 
 export const assets = {
   learn_what_works_large,
@@ -17,5 +18,6 @@ export const assets = {
   app_integrations_large,
   food_plan,
   people1,
-  people2
+  people2,
+  daily_plan
 }

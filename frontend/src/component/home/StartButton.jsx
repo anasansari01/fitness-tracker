@@ -15,7 +15,7 @@ const StartButton = () => {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-xl font-bold">MyFitnessInfo</h1>
           <div
-            className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer"
+            className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-200 "
             onClick={handleStartClick}
           >
             <svg
@@ -35,20 +35,22 @@ const StartButton = () => {
           </div>
         </div>
       </section>
-      <section className="bg-blue-600 text-white py-10">
+
+      <section className="bg-gradient-to-b from-blue-600 to-white text-white py-10">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-center text-center md:text-left">
+          {/* Left Side - Text Content */}
           <div className="md:w-1/2 px-6 ml-40">
             <p className="text-xl">#1 nutrition tracking app</p>
             <h1 className="text-6xl font-bold mt-2">
               Nutrition tracking <br />
               for <span className="text-yellow-300">real life</span>
             </h1>
-            <p className="mt-4 text-lg">
+            <p className="mt-4 text-lg text-blue-900">
               Make progress with the all-in-one food, exercise, and calorie
               tracker.
             </p>
             <button
-              className="mt-6 bg-white text-blue-600 px-10 py-3 rounded-full shadow-lg font-bold cursor-pointer"
+              className="mt-6 bg-white text-blue-600 px-10 py-3 rounded-full shadow-lg font-bold cursor-pointer hover:bg-gray-200 "
               onClick={handleStartClick}
             >
               START TODAY →

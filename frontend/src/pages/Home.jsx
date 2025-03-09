@@ -4,6 +4,7 @@ import HealthGoal from "../component/home/HealthGoal";
 import StartButton from "../component/home/StartButton";
 import FoodPlan from "../component/home/FoodPlan";
 import GetResult from "../component/home/GetResult";
+import Quiz from "../component/home/Quiz";
 
 const Home = () => {
   return (
@@ -13,6 +14,7 @@ const Home = () => {
       {<HealthGoal />}
       {<FoodPlan />}
       {<GetResult />}
+      {<Quiz />}
     </div>
   );
 };
