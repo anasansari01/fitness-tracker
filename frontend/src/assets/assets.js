@@ -11,6 +11,7 @@ import daily_plan from './daily-plan.webp'
 import dietician_large from './dietician-large.webp'
 import food_full from './food-full.webp'
 import running_full from './running-full.webp'
+import as_seen_large from './as-seen-large.webp'
 
 export const assets = {
   learn_what_works_large,
@@ -25,5 +26,6 @@ export const assets = {
   daily_plan,
   dietician_large,
   food_full,
-  running_full
+  running_full,
+  as_seen_large,
 }

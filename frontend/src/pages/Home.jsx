@@ -6,6 +6,7 @@ import FoodPlan from "../component/home/FoodPlan";
 import GetResult from "../component/home/GetResult";
 import Quiz from "../component/home/Quiz";
 import KnowledgeSection from "../component/home/KnowledgeSection";
+import Footer from "../component/home/Footer";
 
 const Home = () => {
   return (
@@ -17,6 +18,7 @@ const Home = () => {
       {<GetResult />}
       {<Quiz />}
       {<KnowledgeSection />}
+      {<Footer />}
     </div>
   );
 };
